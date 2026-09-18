@@ -1,92 +1,90 @@
-# olist-fulfillment-risk-monitor
-
 # Olist Fulfillment Risk Monitor
 
-A product analytics project that uses SQL and Python to identify e-commerce fulfillment risks, understand their impact on customers, and translate the findings into an operations-focused product solution.
+## Why I built this
 
-## Problem
+I wanted to look at a simple product question:
 
-Late deliveries can negatively affect customer experience, but simply tracking late orders after they happen does not help operations teams intervene early.
+> **If an order is going to be late, can we identify the problem early enough to do something about it?**
 
-This project asks:
+Instead of only looking at how many orders were late, I wanted to understand **where delays were happening, what was associated with them, how customers reacted, and what a product team could actually do with that information.**
 
-> **Where in the fulfillment journey are delays emerging, what signals are associated with late delivery, and how can those signals be turned into actionable interventions?**
+This project uses the Olist Brazilian E-Commerce dataset to explore that problem and turn the analysis into a small product concept for fulfillment operations.
 
-## Dataset
+---
 
-The project uses the **Brazilian E-Commerce Public Dataset by Olist**, containing approximately 100K orders from 2016–2018.
+## The journey I looked at
 
-The dataset includes information about:
+I mapped the order journey as:
 
-- Customers
-- Orders
-- Order items
-- Sellers
-- Products
-- Payments
-- Reviews
-- Geolocation
+**Customer places order → Seller handles order → Carrier receives it → Order reaches customer → Customer leaves a review → Customer may purchase again**
 
-Dataset: [Olist Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
+I used SQL to investigate each part of this journey and look for patterns in delivery performance.
 
-## Tools
+---
 
-- **SQL (DuckDB)** — data exploration, joins, segmentation, KPI analysis and risk-rule validation
-- **Python / Pandas** — data preparation and product-monitoring dataset creation
-- **Google Sheets** — operations-facing intervention queue and experiment tracker
+## What I found
 
-## Key Analysis
+The dataset contains around 100K orders, with approximately 96K delivered orders.
 
-The analysis examined the fulfillment journey:
+A few findings stood out:
 
-**Order → Seller handling → Carrier transit → Customer delivery → Review → Repeat purchase**
-
-Key findings from approximately 96K delivered orders:
-
-- Overall late-delivery rate: **8.11%**
-- Orders with seller handling above 10 days had a **33.72%** late-delivery rate.
-- Orders with carrier transit above 14 days had a **37.13%** late-delivery rate.
-- Orders with both prolonged seller handling and carrier transit had a **28.56%** late-delivery rate, compared with **0.78%** for orders without either bottleneck.
+- **8.11%** of delivered orders were late.
+- When seller handling took **more than 10 days**, the historical late-delivery rate was **33.72%**.
+- When carrier transit took **more than 14 days**, the historical late-delivery rate was **37.13%**.
+- When both seller handling and carrier transit were prolonged, the late-delivery rate was **28.56%**, compared with **0.78%** for orders without either bottleneck.
 - Late orders had an average review score of **2.57**, compared with **4.29** for early/on-time orders.
 
-These are historical associations in the dataset and do not establish causality.
+These relationships are based on historical data and should not be interpreted as proof of causation.
 
-## Product Solution
+---
 
-Based on the analysis, I designed an **Olist Fulfillment Risk Monitor** for operations teams.
+## From analysis to product idea
 
-The proposed workflow:
+The interesting part for me was that simply saying *"8% of orders are late"* doesn't really help an operations team.
 
-1. Monitor fulfillment-stage signals
-2. Identify potential bottlenecks
-3. Classify orders by risk level
-4. Identify whether the signal is primarily seller-side, carrier-side, or both
-5. Prioritize high-risk orders
-6. Route orders to an appropriate operational intervention
-7. Measure whether interventions improve outcomes
+So I translated the analysis into a product concept:
 
-### Example interventions
+### Olist Fulfillment Risk Monitor
 
-| Bottleneck | Proposed action |
+The idea is to give an operations team a way to answer:
+
+**Which orders need attention, why are they at risk, and what should we do about them?**
+
+The proposed workflow is:
+
+**Monitor fulfillment → Identify bottleneck → Assign risk → Prioritize → Intervene → Measure outcome**
+
+For example:
+
+| Problem detected | Suggested action |
 |---|---|
-| Seller | Seller follow-up |
-| Carrier | Carrier escalation + ETA review |
+| Seller-side delay | Seller follow-up |
+| Carrier-side delay | Carrier escalation + ETA review |
 | Both | Priority operations intervention |
-| Healthy | Continue monitoring |
+| No major signal | Continue monitoring |
 
-## Risk Validation
+I also added order value as a prioritization signal so that the team can distinguish between a large number of alerts and the orders that may deserve immediate attention.
 
-A prototype critical-risk rule was tested against historical outcomes.
+---
 
-- **18,994** orders were flagged as critical
-- **85.98% recall** — captured 85.98% of historically late orders
-- **35.42% precision** — 35.42% of flagged orders were historically late
+## Testing the idea
 
-This is a historical validation of the prototype rule, not a deployed predictive model.
+I created a prototype risk rule and tested it against the historical orders.
 
-## Experiment Design
+The rule flagged **18,994 orders** as critical and:
 
-To measure whether the proposed product actually improves fulfillment outcomes, I designed a control/treatment experiment.
+- Captured **85.98%** of historically late orders
+- Had **35.42% precision**
+
+This is a historical validation of the prototype rules, rather than a deployed prediction model.
+
+The next step in a real product would be to calculate risk using only information available **while an order is still being fulfilled**, rather than using completed delivery times.
+
+---
+
+## Measuring whether the product actually works
+
+I also designed an experiment rather than assuming that the monitor would improve outcomes.
 
 ### Control
 Normal fulfillment process
@@ -94,30 +92,49 @@ Normal fulfillment process
 ### Treatment
 Risk-based intervention for high-risk orders
 
-### Primary KPI
-- Late delivery rate
+### Primary metric
+**Late delivery rate**
 
-### Secondary KPIs
+### Other metrics
 - Seller handling time
 - Carrier transit time
 - Low review rate
-
-### Guardrail KPI
 - Intervention / alert volume
 
-The experiment framework is included in the project deliverables; no treatment results are fabricated.
+The goal would be to reduce late deliveries without creating so many alerts that the operations team cannot act on them.
 
-## Project Deliverables
+---
 
-- `sql_project1.ipynb` — complete analysis and SQL/Python workflow
-- `intervention_queue.csv` — historically identified high-risk orders and recommended actions
-- `risk_summary.csv` — risk-level and bottleneck summary
-- Google Sheets — executive summary, intervention queue and experiment tracker
+## Tools
 
-## Product Thinking
+- **SQL / DuckDB** — analysis, joins, segmentation and KPI calculation
+- **Python / Pandas** — data preparation and monitor creation
+- **Google Sheets** — intervention queue, executive summary and experiment tracker
 
-The project follows the product analytics workflow:
+---
 
-**Business problem → KPI → User journey → Root-cause analysis → Segmentation → Product intervention → Prioritization → Experiment design → Measurement**
+## Dataset
 
-The goal was not just to identify that deliveries were late, but to translate operational data into a **decision-making workflow for a product/operations team**.
+This project uses the **Brazilian E-Commerce Public Dataset by Olist**, containing anonymized e-commerce data from 2016–2018.
+
+Dataset: https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
+
+---
+
+## Files
+
+- `sql_project1.ipynb` — complete analysis and workflow
+- `intervention_queue.csv` — prioritized historical intervention queue
+- `risk_summary.csv` — risk and bottleneck summary
+
+The accompanying Google Sheet contains the executive summary, intervention queue and experiment tracker.
+
+---
+
+## What this project demonstrates
+
+I wanted this project to go beyond simply building a dashboard.
+
+The overall thought process was:
+
+**Find a business problem → understand the customer journey → investigate the data → identify a meaningful signal → turn it into a product idea → decide how the team would use it → define how to measure whether it works.**
